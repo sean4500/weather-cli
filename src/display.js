@@ -4,11 +4,11 @@
 import pc from 'picocolors';
 import { abbreviateCardinalDirection } from './api.js';
 
-export function displayCurrent(stationData, googleCurrent) {
+export function displayCurrent(stationData, noaaCurrent) {
   console.log(pc.bold(pc.cyan('\n--- Current Conditions ---')));
   
   const temp = pc.yellow(stationData.tempf + '°F');
-  const condition = pc.blue(googleCurrent.weatherCondition.description.text);
+  const condition = pc.blue(noaaCurrent.textDescription);
   const feelsLike = pc.yellow(stationData.feelsLike + '°F');
   const humidity = pc.magenta(stationData.humidity + '%');
   const windDir = abbreviateCardinalDirection(stationData.winddir);
@@ -50,13 +50,20 @@ export function displayForecast(forecastData) {
   console.log(pc.dim('Date       Condition          High / Low'));
   console.log(pc.dim('----------------------------------------'));
 
-  forecastData.forecastDays.forEach((day) => {
-    const dateStr = `${day.displayDate.month}/${day.displayDate.day}`.padEnd(10);
-    const condition = day.daytimeForecast.weatherCondition.description.text.padEnd(18);
-    const high = pc.red(day.maxTemperature.degrees + '°');
-    const low = pc.blue(day.minTemperature.degrees + '°');
-    
+  const periods = forecastData.periods;
+  for (let i = 0; i < periods.length; i++) {
+    const period = periods[i];
+    // Skip nighttime periods for the main row, but use their temp as the "low"
+    if (!period.isDaytime) continue;
+
+    const nextPeriod = periods[i + 1];
+    const date = new Date(period.startTime);
+    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`.padEnd(10);
+    const condition = period.shortForecast.padEnd(18);
+    const high = pc.red(period.temperature + '°');
+    const low = nextPeriod && !nextPeriod.isDaytime ? pc.blue(nextPeriod.temperature + '°') : pc.blue('--°');
+
     console.log(`${dateStr} ${condition} ${high} / ${low}`);
-  });
+  }
   console.log('');
 }

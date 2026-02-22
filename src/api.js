@@ -61,44 +61,43 @@ export async function fetchStationData(config) {
 }
 
 /**
- * Fetch current conditions and forecast from Google Weather API.
+ * Fetch current conditions and forecast from NOAA Weather API.
  */
-export async function fetchGoogleWeather(config) {
-  const { GOOGLE_WEATHER_API_KEY, WEATHER_LAT, WEATHER_LON } = config;
+export async function fetchNOAAWeather(config) {
+  const { WEATHER_LAT, WEATHER_LON } = config;
+  const headers = { 'User-Agent': 'weather-cli (https://github.com/sean4500/weather-cli)' };
+
+  // 1. Get metadata to find forecast and station URLs
+  const pointsUrl = `https://api.weather.gov/points/${WEATHER_LAT},${WEATHER_LON}`;
+  const pointsRes = await fetch(pointsUrl, { headers });
+  if (!pointsRes.ok) throw new Error(`NOAA Points API failed: ${pointsRes.status}`);
+  const pointsData = await pointsRes.json();
+
+  const forecastUrl = pointsData.properties.forecast;
+  const stationsUrl = pointsData.properties.observationStations;
+
+  // 2. Get Forecast and Stations in parallel
+  const [forecastRes, stationsRes] = await Promise.all([
+    fetch(forecastUrl, { headers }),
+    fetch(stationsUrl, { headers })
+  ]);
+
+  if (!forecastRes.ok) throw new Error(`NOAA Forecast API failed: ${forecastRes.status}`);
+  if (!stationsRes.ok) throw new Error(`NOAA Stations API failed: ${stationsRes.status}`);
+
+  const forecastData = await forecastRes.json();
+  const stationsData = await stationsRes.json();
+
+  // 3. Get latest observation from the first station
+  const stationId = stationsData.features[0].properties.stationIdentifier;
+  const observationsUrl = `https://api.weather.gov/stations/${stationId}/observations/latest`;
+  const observationsRes = await fetch(observationsUrl, { headers });
   
-  // Fetch Current Conditions
-  const currentUrl = new URL('https://weather.googleapis.com/v1/currentConditions:lookup');
-  currentUrl.searchParams.append('key', GOOGLE_WEATHER_API_KEY);
-  currentUrl.searchParams.append('location.latitude', WEATHER_LAT);
-  currentUrl.searchParams.append('location.longitude', WEATHER_LON);
-  currentUrl.searchParams.append('units_system', 'IMPERIAL');
+  if (!observationsRes.ok) throw new Error(`NOAA Observations API failed: ${observationsRes.status}`);
+  const currentData = await observationsRes.json();
 
-  // Fetch Forecast
-  const forecastUrl = new URL('https://weather.googleapis.com/v1/forecast/days:lookup');
-  forecastUrl.searchParams.append('key', GOOGLE_WEATHER_API_KEY);
-  forecastUrl.searchParams.append('location.latitude', WEATHER_LAT);
-  forecastUrl.searchParams.append('location.longitude', WEATHER_LON);
-  forecastUrl.searchParams.append('days', '5');
-  forecastUrl.searchParams.append('units_system', 'IMPERIAL');
-
-  const [currentRes, forecastRes] = await Promise.all([
-    fetch(currentUrl),
-    fetch(forecastUrl)
-  ]);
-
-  if (!currentRes.ok) throw new Error(`Google Current Conditions API failed: ${currentRes.status}`);
-  if (!forecastRes.ok) throw new Error(`Google Forecast API failed: ${forecastRes.status}`);
-
-  const [current, forecast] = await Promise.all([
-    currentRes.json(),
-    forecastRes.json()
-  ]);
-
-  // Clean up cardinal directions in forecast
-  forecast.forecastDays.forEach((day) => {
-    day.daytimeForecast.wind.direction.cardinal = abbreviateCardinalDirection(day.daytimeForecast.wind.direction.cardinal);
-    day.nighttimeForecast.wind.direction.cardinal = abbreviateCardinalDirection(day.nighttimeForecast.wind.direction.cardinal);
-  });
-
-  return { current, forecast };
+  return { 
+    current: currentData.properties, 
+    forecast: forecastData.properties 
+  };
 }
