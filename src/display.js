@@ -17,9 +17,30 @@ export function displayCurrent(stationData, googleCurrent) {
 
   console.log(`Condition: ${condition}`);
   console.log(`Temp:      ${temp} (Feels like: ${feelsLike})`);
-  console.log(`Wind:      ${wind}`);
   console.log(`Humidity:  ${humidity}`);
   console.log(`Barometer: ${baro}`);
+
+  // Extra Station Data
+  if (stationData.uv !== undefined) {
+    console.log(`UV Index:  ${pc.red(stationData.uv)}`);
+  }
+
+  console.log(`Wind:      ${wind}`);
+
+  if (stationData.maxdailygust !== undefined) {
+    console.log(`Max Gust:  ${pc.green(stationData.maxdailygust + ' mph')}`);
+  }
+  
+  if (stationData.hourlyrainin !== undefined || stationData.dailyrainin !== undefined) {
+    const hourly = stationData.hourlyrainin || 0;
+    const daily = stationData.dailyrainin || 0;
+    console.log(`Rain:      ${pc.blue(hourly + ' in/hr')} (Today: ${pc.blue(daily + ' in')})`);
+  }
+
+  if (stationData.lastRain) {
+    const lastRainDate = new Date(stationData.lastRain);
+    console.log(`Last Rain: ${pc.dim(lastRainDate.toLocaleString())}`);
+  }
 }
 
 export function displayForecast(forecastData) {
