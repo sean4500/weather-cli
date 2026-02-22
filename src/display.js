@@ -47,8 +47,8 @@ export function displayForecast(forecastData) {
   console.log(pc.bold(pc.cyan('\n--- 5-Day Forecast ---')));
 
   // Simple table-like header
-  console.log(pc.dim('Date       Condition          High / Low'));
-  console.log(pc.dim('----------------------------------------'));
+  console.log(pc.dim('Day  Date      Condition          High / Low'));
+  console.log(pc.dim('--------------------------------------------'));
 
   const periods = forecastData.periods;
   for (let i = 0; i < periods.length; i++) {
@@ -58,8 +58,9 @@ export function displayForecast(forecastData) {
 
     const nextPeriod = periods[i + 1];
     const date = new Date(period.startTime);
-    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`.padEnd(10);
-    const condition = period.shortForecast.padEnd(18);
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const dateStr = `${dayOfWeek.padEnd(5)}${date.getMonth() + 1}/${date.getDate()}`.padEnd(15);
+    const condition = period.shortForecast.padEnd(19);
     const high = pc.red(period.temperature + '°');
     const low = nextPeriod && !nextPeriod.isDaytime ? pc.blue(nextPeriod.temperature + '°') : pc.blue('--°');
 
