@@ -54,7 +54,7 @@ program
 
 program
   .command('forecast')
-  .description('Show 5-day weather forecast')
+  .description('Show 7-day weather forecast')
   .action(async () => {
     checkConfig();
     try {

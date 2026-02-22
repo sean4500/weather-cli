@@ -44,7 +44,7 @@ export function displayCurrent(stationData, noaaCurrent) {
 }
 
 export function displayForecast(forecastData) {
-  console.log(pc.bold(pc.cyan('\n--- 5-Day Forecast ---')));
+  console.log(pc.bold(pc.cyan('\n--- 7-Day Forecast ---')));
 
   // Simple table-like header
   console.log(pc.dim('Day  Date      Condition          High / Low'));
