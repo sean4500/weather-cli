@@ -14,6 +14,7 @@ const config = {
   AMBIENT_DEVICE_ID: process.env.AMBIENT_DEVICE_ID,
   AMBIENT_APPLICATION_KEY: process.env.AMBIENT_APPLICATION_KEY,
   AMBIENT_API_KEY: process.env.AMBIENT_API_KEY,
+  NOAA_USER_AGENT: process.env.NOAA_USER_AGENT,
   WEATHER_LAT: process.env.WEATHER_LAT || '45.4981',
   WEATHER_LON: process.env.WEATHER_LON || '-122.4314'
 };
@@ -23,6 +24,7 @@ const checkConfig = () => {
   if (!config.AMBIENT_DEVICE_ID) missing.push('AMBIENT_DEVICE_ID');
   if (!config.AMBIENT_APPLICATION_KEY) missing.push('AMBIENT_APPLICATION_KEY');
   if (!config.AMBIENT_API_KEY) missing.push('AMBIENT_API_KEY');
+  if (!config.NOAA_USER_AGENT) missing.push('NOAA_USER_AGENT');
 
   if (missing.length > 0) {
     console.error(pc.red(pc.bold('Error: Missing environment variables!')));

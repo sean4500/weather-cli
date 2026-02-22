@@ -64,8 +64,8 @@ export async function fetchStationData(config) {
  * Fetch current conditions and forecast from NOAA Weather API.
  */
 export async function fetchNOAAWeather(config) {
-  const { WEATHER_LAT, WEATHER_LON } = config;
-  const headers = { 'User-Agent': 'weather-cli (https://github.com/sean4500/weather-cli)' };
+  const { WEATHER_LAT, WEATHER_LON, NOAA_USER_AGENT } = config;
+  const headers = { 'User-Agent': NOAA_USER_AGENT };
 
   // 1. Get metadata to find forecast and station URLs
   const pointsUrl = `https://api.weather.gov/points/${WEATHER_LAT},${WEATHER_LON}`;
