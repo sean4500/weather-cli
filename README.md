@@ -1,11 +1,11 @@
 # 🌦️ Weather CLI
 
-A standalone command-line tool to check weather conditions and forecasts by combining data from your personal **Ambient Weather** station and the **Google Weather API**.
+A standalone command-line tool to check weather conditions and forecasts by combining data from your personal **Ambient Weather** station and the **NOAA Weather API**.
 
 ## Features
 
 - **Current Conditions**: Real-time data from your Ambient Weather station (Temp, Humidity, Wind, Barometer).
-- **Forecast**: 5-day weather forecast powered by Google Weather.
+- **Forecast**: 7-day weather forecast powered by NOAA Weather.
 - **Colorized Output**: Easy-to-read terminal output using `picocolors`.
 
 ## Prerequisites
@@ -13,7 +13,7 @@ A standalone command-line tool to check weather conditions and forecasts by comb
 - **Node.js**: Version 18 or higher (uses native `fetch` and ESM).
 - **API Keys**:
   - **Ambient Weather**: An API Key, Application Key, and Device ID from your [Ambient Weather Dashboard](https://ambientweather.net/account).
-  - **Google Weather**: A Google Cloud API Key with access to the Weather API.
+  - **NOAA Weather**: No API key required, but a `User-Agent` string is required by the [NOAA API](https://www.weather.gov/documentation/services-web-api).
 
 ## Installation
 
@@ -46,7 +46,7 @@ Create a file named `.env` in the root of the project:
 AMBIENT_DEVICE_ID=your_device_id
 AMBIENT_APPLICATION_KEY=your_app_key
 AMBIENT_API_KEY=your_api_key
-GOOGLE_WEATHER_API_KEY=your_google_key
+NOAA_USER_AGENT=your-app-name (your-contact-email@example.com)
 
 # Optional: Defaults to Portland, OR if not set
 WEATHER_LAT=45.4981
@@ -58,7 +58,7 @@ WEATHER_LON=-122.4314
 If you used `npm link`, you can run the command directly as `weather`. Otherwise, use `node src/index.js`.
 
 ### 1. View Everything (Default)
-Fetches both current station data and the 5-day forecast.
+Fetches both current station data and the 7-day forecast.
 ```bash
 weather
 ```
@@ -68,7 +68,7 @@ weather
 weather current
 ```
 
-### 3. 5-Day Forecast Only
+### 3. 7-Day Forecast Only
 ```bash
 weather forecast
 ```
@@ -81,7 +81,7 @@ weather --help
 ## Project Structure
 
 - `src/index.js`: Entry point and CLI command definitions using `commander`.
-- `src/api.js`: API clients for Ambient Weather and Google Weather.
+- `src/api.js`: API clients for Ambient Weather and NOAA Weather.
 - `src/display.js`: Terminal output formatting and styling.
 
 ## License
