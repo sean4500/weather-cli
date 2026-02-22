@@ -43,13 +43,32 @@ export function displayCurrent(stationData, noaaCurrent) {
   }
 }
 
+// Helper to wrap text into multiple lines
+export const wrapText = (text, width) => {
+  if (!text) return [];
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    if ((currentLine + word).length > width) {
+      if (currentLine) lines.push(currentLine.trim());
+      currentLine = word + ' ';
+    } else {
+      currentLine += word + ' ';
+    }
+  }
+  if (currentLine) lines.push(currentLine.trim());
+  return lines;
+};
+
 export function displayForecast(forecastData) {
   console.log(pc.bold(pc.cyan('\n--- 7-Day Forecast ---')));
 
   // Define column widths for consistency
   const colWidths = {
     dayDate: 12,
-    condition: 21,
+    condition: 32,
     temp: 14,
     rain: 10,
     wind: 20
@@ -61,10 +80,10 @@ export function displayForecast(forecastData) {
     'Condition'.padEnd(colWidths.condition) +
     'High / Low'.padEnd(colWidths.temp) +
     'Rain %'.padEnd(colWidths.rain) +
-    'Wind';
+    'Wind'.padEnd(colWidths.wind);
 
   console.log(pc.dim(header));
-  console.log(pc.dim('-'.repeat(header.length + 5)));
+  console.log(pc.dim('-'.repeat(header.length)));
 
   const periods = forecastData.periods;
   for (let i = 0; i < periods.length; i++) {
@@ -79,8 +98,9 @@ export function displayForecast(forecastData) {
     const dayDateText = `${dayOfWeek}  ${date.getMonth() + 1}/${date.getDate()}`;
     const col1 = dayDateText.padEnd(colWidths.dayDate);
 
-    // Column 2: Condition
-    const col2 = period.shortForecast.padEnd(colWidths.condition);
+    // Column 2: Condition (Wrapped)
+    const conditionLines = wrapText(period.shortForecast, colWidths.condition - 2);
+    const col2 = (conditionLines[0] || '').padEnd(colWidths.condition);
 
     // Column 3: Temperatures (Manual padding for colors)
     const high = pc.red(period.temperature + '°');
@@ -98,7 +118,15 @@ export function displayForecast(forecastData) {
     // Column 5: Wind
     const col5 = pc.green(period.windSpeed + ' ' + period.windDirection);
 
+    // Print the first line of the row
     console.log(`${col1}${col2}${col3}${col4}${col5}`);
+
+    // Print subsequent lines for wrapped conditions
+    for (let j = 1; j < conditionLines.length; j++) {
+      const padding = ' '.repeat(colWidths.dayDate);
+      const extraLine = conditionLines[j].padEnd(colWidths.condition);
+      console.log(`${padding}${extraLine}`);
+    }
   }
   console.log('');
 }
