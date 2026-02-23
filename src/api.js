@@ -101,3 +101,28 @@ export async function fetchNOAAWeather(config) {
     forecast: forecastData.properties 
   };
 }
+
+/**
+ * Geocode a location string into coordinates using OpenStreetMap Nominatim API.
+ */
+export async function geocode(location, userAgent) {
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`;
+  const response = await fetch(url, {
+    headers: { 'User-Agent': userAgent }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Geocoding failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (data.length === 0) {
+    throw new Error(`Location not found: "${location}"`);
+  }
+
+  return {
+    lat: data[0].lat,
+    lon: data[0].lon,
+    display_name: data[0].display_name
+  };
+}

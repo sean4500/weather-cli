@@ -73,7 +73,15 @@ weather current
 weather forecast
 ```
 
-### 4. Help
+### 4. Custom Location
+You can specify a location string to get the weather for another area. This will use OpenStreetMap to resolve the coordinates and fetch data from NOAA. (Note: Station data is skipped for custom locations).
+```bash
+weather forecast --location="Sisters, OR"
+# or shorthand
+weather -l "Bend, OR"
+```
+
+### 5. Help
 ```bash
 weather --help
 ```

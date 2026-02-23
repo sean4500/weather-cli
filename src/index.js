@@ -7,7 +7,7 @@
 import 'dotenv/config';
 import { program } from 'commander';
 import pc from 'picocolors';
-import { fetchStationData, fetchNOAAWeather } from './api.js';
+import { fetchStationData, fetchNOAAWeather, geocode } from './api.js';
 import { displayCurrent, displayForecast } from './display.js';
 
 const config = {
@@ -38,17 +38,62 @@ const checkConfig = () => {
 program
   .name('weather')
   .description('Standalone CLI to check weather from your station and NOAA APIs')
-  .version('1.0.0');
+  .version('1.0.0')
+  .option('-l, --location <location>', 'Specify location for weather');
+
+/**
+ * Helper to resolve coordinates from options or config
+ */
+async function getCoords(options) {
+  if (options.location) {
+    console.log(pc.dim(`Geocoding "${options.location}"...`));
+    const result = await geocode(options.location, config.NOAA_USER_AGENT);
+    console.log(pc.bold(pc.green(`Fetching weather for ${result.display_name}...`)));
+    return { 
+      WEATHER_LAT: result.lat, 
+      WEATHER_LON: result.lon, 
+      isCustom: true 
+    };
+  }
+  return { 
+    WEATHER_LAT: config.WEATHER_LAT, 
+    WEATHER_LON: config.WEATHER_LON, 
+    isCustom: false 
+  };
+}
 
 program
   .command('current')
   .description('Show current weather conditions')
   .action(async () => {
     checkConfig();
+    const options = program.opts();
     try {
-      const station = await fetchStationData(config);
-      const noaa = await fetchNOAAWeather(config);
-      displayCurrent(station, noaa.current);
+      const coords = await getCoords(options);
+      const currentConfig = { ...config, ...coords };
+      
+      const requests = [fetchNOAAWeather(currentConfig)];
+      if (!coords.isCustom) {
+        requests.push(fetchStationData(currentConfig));
+      }
+
+      const results = await Promise.all(requests);
+      const noaa = results[0];
+      const station = !coords.isCustom ? results[1] : null;
+
+      if (station) {
+        displayCurrent(station, noaa.current);
+      } else {
+        console.log(pc.bold(pc.cyan('\n--- Current Conditions ---')));
+        console.log(`Location:  ${pc.green(currentConfig.WEATHER_LAT + ', ' + currentConfig.WEATHER_LON)}`);
+        console.log(`Condition: ${pc.blue(noaa.current.textDescription || 'N/A')}`);
+        // If we don't have station data, we can at least show NOAA's temp if available
+        if (noaa.current.temperature.value !== null) {
+          const tempC = noaa.current.temperature.value;
+          const tempF = (tempC * 9/5) + 32;
+          console.log(`Temp:      ${pc.yellow(tempF.toFixed(1) + '°F')}`);
+        }
+      }
     } catch (err) {
       console.error(pc.red(`Failed to fetch current weather: ${err.message}`));
     }
@@ -59,8 +104,11 @@ program
   .description('Show 7-day weather forecast')
   .action(async () => {
     checkConfig();
+    const options = program.opts();
     try {
-      const noaa = await fetchNOAAWeather(config);
+      const coords = await getCoords(options);
+      const currentConfig = { ...config, ...coords };
+      const noaa = await fetchNOAAWeather(currentConfig);
       displayForecast(noaa.forecast);
     } catch (err) {
       console.error(pc.red(`Failed to fetch forecast: ${err.message}`));
@@ -71,15 +119,29 @@ program
 program
   .action(async () => {
     checkConfig();
+    const options = program.opts();
     try {
-      console.log(pc.bold(pc.green('Fetching weather data for ' + config.WEATHER_LAT + ', ' + config.WEATHER_LON + '...')));
-      
-      const [station, noaa] = await Promise.all([
-        fetchStationData(config),
-        fetchNOAAWeather(config)
-      ]);
+      const coords = await getCoords(options);
+      const currentConfig = { ...config, ...coords };
 
-      displayCurrent(station, noaa.current);
+      const requests = [fetchNOAAWeather(currentConfig)];
+      if (!coords.isCustom) {
+        requests.push(fetchStationData(currentConfig));
+      }
+
+      const [noaa, station] = await Promise.all(requests);
+
+      if (station) {
+        displayCurrent(station, noaa.current);
+      } else {
+        console.log(pc.bold(pc.cyan('\n--- Current Conditions ---')));
+        console.log(`Condition: ${pc.blue(noaa.current.textDescription || 'N/A')}`);
+        if (noaa.current.temperature.value !== null) {
+          const tempF = (noaa.current.temperature.value * 9/5) + 32;
+          console.log(`Temp:      ${pc.yellow(tempF.toFixed(1) + '°F')}`);
+        }
+      }
+      
       displayForecast(noaa.forecast);
       
     } catch (err) {
