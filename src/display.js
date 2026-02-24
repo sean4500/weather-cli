@@ -4,42 +4,126 @@
 import pc from 'picocolors';
 import { abbreviateCardinalDirection } from './api.js';
 
-export function displayCurrent(stationData, noaaCurrent) {
+export function getAsciiIcon(iconUrl) {
+  if (!iconUrl) return '';
+  
+  // Extract code (e.g., "few", "rain") and time (day/night)
+  // URL example: https://api.weather.gov/icons/land/day/few?size=medium
+  const parts = iconUrl.split('/');
+  const isDay = parts.includes('day');
+  const code = parts[parts.length - 1].split('?')[0].split(',')[0]; // Handle multi-codes like "few,20"
+
+  const sun = pc.yellow('  \\   /  \n   .-.   \n― (   ) ―\n   `-’   \n  /   \\  ');
+  const moon = pc.white('   .-.   \n  (   ). \n   `-\'   \n    \'    ');
+  const cloud = pc.white('   .--.   \n .-(    ). \n(___.__)__)');
+  
+  const sunCloud = isDay ? 
+      [
+        pc.yellow('  \\   /  '),
+        pc.white(' _.-.'),
+        pc.white('(___.__)__)') 
+      ].join('\n') : 
+      [
+        pc.white('   .-.   '),
+        pc.white('  (   ). '),
+        pc.white(' (__   ) ') 
+      ].join('\n');
+
+  const moonCloud = [
+        pc.white('   .-.   '),
+        pc.white('  (   ). '),
+        pc.white('(___.__)__)') 
+      ].join('\n');
+
+  const rain = pc.blue('  ‘ ‘ ‘ ‘ \n ‘ ‘ ‘ ‘ ');
+  const snow = pc.white('  * * * * \n * * * * ');
+  const lightning = pc.yellow('   _/  \n  /    \n /_    ');
+  const fog = pc.dim(' - - - - \n - - - - \n - - - - ');
+  const wind = pc.cyan('   ~ ~ ~ \n  ~ ~ ~ ~\n   ~ ~ ~ ');
+
+  // Mappings
+  if (code.includes('wind')) {
+    return wind;
+  }
+  if (code.includes('tsra')) {
+    return cloud + '\n' + lightning;
+  }
+  if (code.includes('sn') || code.includes('blz') || code.includes('snow')) {
+    return cloud + '\n' + snow;
+  }
+  if (code.includes('rain') || code.includes('ra') || code.includes('shra') || code.includes('hi_shwrs')) {
+     return cloud + '\n' + rain;
+  }
+  if (code.includes('fg') || code.includes('mist') || code.includes('smoke')) {
+    return fog;
+  }
+  if (code.includes('skc') || code.includes('few')) {
+    return isDay ? sun : moon;
+  }
+  if (code.includes('sct') || code.includes('bkn') || code.includes('ovc')) {
+    return isDay ? sunCloud : moonCloud;
+  }
+  
+  return cloud; // Default
+}
+
+export function displayCurrent(stationData, noaaCurrent, forecastCurrent = null) {
   console.log(pc.bold(pc.cyan('\n--- Current Conditions ---')));
-  
-  const temp = pc.yellow(stationData.tempf + '°F');
-  const condition = pc.blue(noaaCurrent.textDescription);
-  const feelsLike = pc.yellow(stationData.feelsLike + '°F');
-  const humidity = pc.magenta(stationData.humidity + '%');
-  const windDir = abbreviateCardinalDirection(stationData.winddir);
-  const wind = pc.green(`${windDir} ${stationData.windspeedmph} mph (Gust: ${stationData.windgustmph} mph)`);
-  const baro = pc.cyan(stationData.baromrelin + ' inHg');
 
+  // Use forecast as fallback if current observation is missing details
+  const iconUrl = noaaCurrent.icon || (forecastCurrent ? forecastCurrent.icon : null);
+  const description = noaaCurrent.textDescription || (forecastCurrent ? forecastCurrent.shortForecast : 'N/A');
+
+  // ASCII Icon
+  const icon = getAsciiIcon(iconUrl);
+  if (icon) {
+    console.log(icon);
+    console.log(''); // Spacing
+  }
+  
+  const condition = pc.blue(description);
   console.log(`Condition: ${condition}`);
-  console.log(`Temp:      ${temp} (Feels like: ${feelsLike})`);
-  console.log(`Humidity:  ${humidity}`);
-  console.log(`Barometer: ${baro}`);
 
-  // Extra Station Data
-  if (stationData.uv !== undefined) {
-    console.log(`UV Index:  ${pc.red(stationData.uv)}`);
-  }
+  if (stationData) {
+    const temp = pc.yellow(stationData.tempf + '°F');
+    const feelsLike = pc.yellow(stationData.feelsLike + '°F');
+    const humidity = pc.magenta(stationData.humidity + '%');
+    const windDir = abbreviateCardinalDirection(stationData.winddir);
+    const wind = pc.green(`${windDir} ${stationData.windspeedmph} mph (Gust: ${stationData.windgustmph} mph)`);
+    const baro = pc.cyan(stationData.baromrelin + ' inHg');
 
-  console.log(`Wind:      ${wind}`);
+    console.log(`Temp:      ${temp} (Feels like: ${feelsLike})`);
+    console.log(`Humidity:  ${humidity}`);
+    console.log(`Barometer: ${baro}`);
 
-  if (stationData.maxdailygust !== undefined) {
-    console.log(`Max Gust:  ${pc.green(stationData.maxdailygust + ' mph')}`);
-  }
-  
-  if (stationData.hourlyrainin !== undefined || stationData.dailyrainin !== undefined) {
-    const hourly = stationData.hourlyrainin || 0;
-    const daily = stationData.dailyrainin || 0;
-    console.log(`Rain:      ${pc.blue(hourly + ' in/hr')} (Today: ${pc.blue(daily + ' in')})`);
-  }
+    // Extra Station Data
+    if (stationData.uv !== undefined) {
+      console.log(`UV Index:  ${pc.red(stationData.uv)}`);
+    }
 
-  if (stationData.lastRain) {
-    const lastRainDate = new Date(stationData.lastRain);
-    console.log(`Last Rain: ${pc.dim(lastRainDate.toLocaleString())}`);
+    console.log(`Wind:      ${wind}`);
+
+    if (stationData.maxdailygust !== undefined) {
+      console.log(`Max Gust:  ${pc.green(stationData.maxdailygust + ' mph')}`);
+    }
+    
+    if (stationData.hourlyrainin !== undefined || stationData.dailyrainin !== undefined) {
+      const hourly = stationData.hourlyrainin || 0;
+      const daily = stationData.dailyrainin || 0;
+      console.log(`Rain:      ${pc.blue(hourly + ' in/hr')} (Today: ${pc.blue(daily + ' in')})`);
+    }
+
+    if (stationData.lastRain) {
+      const lastRainDate = new Date(stationData.lastRain);
+      console.log(`Last Rain: ${pc.dim(lastRainDate.toLocaleString())}`);
+    }
+  } else {
+    // Fallback to NOAA data if no station data
+    if (noaaCurrent.temperature.value !== null) {
+      const tempC = noaaCurrent.temperature.value;
+      const tempF = (tempC * 9/5) + 32;
+      console.log(`Temp:      ${pc.yellow(tempF.toFixed(1) + '°F')}`);
+    }
   }
 }
 

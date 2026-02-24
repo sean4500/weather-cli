@@ -81,19 +81,7 @@ program
       const noaa = results[0];
       const station = !coords.isCustom ? results[1] : null;
 
-      if (station) {
-        displayCurrent(station, noaa.current);
-      } else {
-        console.log(pc.bold(pc.cyan('\n--- Current Conditions ---')));
-        console.log(`Location:  ${pc.green(currentConfig.WEATHER_LAT + ', ' + currentConfig.WEATHER_LON)}`);
-        console.log(`Condition: ${pc.blue(noaa.current.textDescription || 'N/A')}`);
-        // If we don't have station data, we can at least show NOAA's temp if available
-        if (noaa.current.temperature.value !== null) {
-          const tempC = noaa.current.temperature.value;
-          const tempF = (tempC * 9/5) + 32;
-          console.log(`Temp:      ${pc.yellow(tempF.toFixed(1) + '°F')}`);
-        }
-      }
+      displayCurrent(station, noaa.current, noaa.forecast.periods[0]);
     } catch (err) {
       console.error(pc.red(`Failed to fetch current weather: ${err.message}`));
     }
@@ -131,16 +119,7 @@ program
 
       const [noaa, station] = await Promise.all(requests);
 
-      if (station) {
-        displayCurrent(station, noaa.current);
-      } else {
-        console.log(pc.bold(pc.cyan('\n--- Current Conditions ---')));
-        console.log(`Condition: ${pc.blue(noaa.current.textDescription || 'N/A')}`);
-        if (noaa.current.temperature.value !== null) {
-          const tempF = (noaa.current.temperature.value * 9/5) + 32;
-          console.log(`Temp:      ${pc.yellow(tempF.toFixed(1) + '°F')}`);
-        }
-      }
+      displayCurrent(station, noaa.current, noaa.forecast.periods[0]);
       
       displayForecast(noaa.forecast);
       
