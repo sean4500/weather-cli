@@ -4,9 +4,43 @@ A standalone command-line tool to check weather conditions and forecasts by comb
 
 ## Features
 
-- **Current Conditions**: Real-time data from your Ambient Weather station (Temp, Humidity, Wind, Barometer).
-- **Forecast**: 7-day weather forecast powered by NOAA Weather.
-- **Colorized Output**: Easy-to-read terminal output using `picocolors`.
+### Current Conditions
+Real-time data from your Ambient Weather station (Temp, Humidity, Wind, Barometer).
+```bash
+--- Current Conditions ---
+   .--.
+ .-(    ).
+(___.__)__)
+  ‘ ‘ ‘ ‘
+ ‘ ‘ ‘ ‘
+
+Condition: Light Rain and Fog/Mist
+Temp:      39.9°F (Feels like: 39.9°F)
+Humidity:  99%
+Barometer: 29.651 inHg
+UV Index:  0
+Wind:      S 0 mph (Gust: 0 mph)
+Max Gust:  5.82 mph
+Rain:      0.07 in/hr (Today: 1.37 in)
+Last Rain: 2/23/2026, 8:35:00 PM
+```
+
+### Forecast 
+7-day weather forecast powered by NOAA Weather
+
+```bash
+--- 7-Day Forecast ---
+Day  Date   Condition                       High / Low    Rain %    Wind
+----------------------------------------------------------------------------------------
+Tue  2/24   Light Rain                      47° / 37°     75%       7 to 10 mph NNE
+Wed  2/25   Chance Light Rain               48° / 35°     52%       7 to 10 mph SW
+Thu  2/26   Chance Light Rain               50° / 37°     37%       7 to 10 mph SW
+Fri  2/27   Chance Light Rain               49° / 33°     31%       9 mph WSW
+Sat  2/28   Slight Chance Light Rain        49° / 32°     16%       5 to 9 mph N
+Sun  3/1    Sunny                           50° / 32°     14%       6 to 10 mph NE
+Mon  3/2    Rain And Snow Likely            52° / --°     18%       6 to 9 mph NE
+```
+**Colorized Output**: Easy-to-read terminal output using `picocolors`.
 
 ## Prerequisites
 
@@ -78,7 +112,7 @@ You can specify a location string to get the weather for another area. This will
 ```bash
 weather forecast --location="Sisters, OR"
 # or shorthand
-weather -l "Bend, OR"
+weather -l "Prineville, OR"
 ```
 
 ### 5. Help
