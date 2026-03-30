@@ -20,3 +20,10 @@ build/
 # Local env overrides
 .env.local
 .env.*.local
+
+# CLI LLM Tools
+GEMINI.md
+.gemini/
+
+CLAUDE.md
+.claude/

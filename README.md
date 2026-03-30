@@ -40,7 +40,6 @@ Sat  2/28   Slight Chance Light Rain        49° / 32°     16%       5 to 9 mph
 Sun  3/1    Sunny                           50° / 32°     14%       6 to 10 mph NE
 Mon  3/2    Rain And Snow Likely            52° / --°     18%       6 to 9 mph NE
 ```
-**Colorized Output**: Easy-to-read terminal output using `picocolors`.
 
 ## Prerequisites
 
